@@ -4,8 +4,11 @@ import os
 import eyed3
 import json
 import shutil
+import sys
+import argparse
 
-
+JSONNAME = "info.json"
+RENAMEDIR = "RenameDir"
 
 #************ work tags ****************
 def get_info_song(pathSong):
@@ -62,29 +65,32 @@ def read_file(pathinfo):
         info =  json.load(outfile)
     return info
 #******************************************
+
 #************ read songs ****************
 def getAllPathSongs(startDir):
     paths= []
     files = os.listdir(startDir)
     for file in files:
-        path = os.path.join(startDir,file)
-        if path.endswith("mp3"):paths.append(path)
+        if file.endswith(".mp3"):
+            path = os.path.join(startDir,file)
+            paths.append(path)
     return paths
 
 def copyFileRenameDir(renameDir,filePaths):
     count = 0
-    newFiles = []
+    newPatpFiles = []
+
     if  os.path.exists(renameDir):
         shutil.rmtree(renameDir)
-
     os.mkdir(renameDir)
+
     for path in filePaths:
         newpath = os.path.join(renameDir,str(count))
         os.mkdir(newpath)
         shutil.copy(path,newpath)
         count += 1
-        newFiles.append(newpath)
-    return newFiles
+        newPatpFiles.append(newpath)
+    return newPatpFiles
 
 def get_all_info(paths):
     for path in paths:
@@ -102,6 +108,7 @@ def get_info(startDir):
     paths = copyFileRenameDir(renameDir,paths)
     get_all_info(paths)
 #************************************************
+
 #************ write songs ****************
 def set_all_info(dirs):
     pathIfo = ""
@@ -137,13 +144,26 @@ def set_info(startDir):
         shutil.move(newSongs.get(key),os.path.join(renameDir,key))
 
 
-JSONNAME = "info.json"
-RENAMEDIR = "RenameDir"
-startDir = "/my_files/github/edits_tags_songs/music/"
+def createParser():
+        parser = argparse.ArgumentParser()
+        parser.add_argument ('-startdir', nargs='?',default=os.getcwd())
+        parser.add_argument ('-mode', nargs='?',default="g")
+        return parser
 
-#get_info(startDir)
-set_info(startDir)
+if __name__== '__main__':
+    parser = createParser()
+    namespace = parser.parse_args(sys.argv[1:])
+    startDir = namespace.startdir
+    if not os.path.exists(startDir):
+        print "Not found " + startDir
+        os._exit(1)
 
+    if namespace.mode == "g":
+        get_info(startDir)
+    elif namespace.mode == "s":
+        set_info(startDir)
+    else:
+        print "Key '-mode' is empty entry 'g' or 's'"
 
 
 
