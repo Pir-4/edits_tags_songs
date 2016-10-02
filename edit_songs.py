@@ -4,8 +4,8 @@ import os
 import eyed3
 import json
 
-path = '/my_files/github/edits_tags_songs/music/Dead By April - Last Goodbye (New Album: "Incomparable" 2011).mp3'
-pathFile = '/my_files/github/edits_tags_songs/music/info.json'
+#path = '/my_files/github/edits_tags_songs/music/Dead By April - Last Goodbye (New Album: "Incomparable" 2011).mp3'
+#pathFile = '/my_files/github/edits_tags_songs/music/info.json'
 
 def get_info_song(pathSong):
     info = {}
@@ -36,11 +36,20 @@ def read_file(pathDirInFile):
         info =  json.load(outfile)
     return info
 
+def getAllPathSongs(startDir):
+    paths= []
+    for d, dir,files in os.walk(startDir):
+        for file in files:
+            path = os.path.join(d,file)
+            if path.endswith("mp3"):paths.append(path)
+    return paths
 
+#info =  get_info_song(path)
+#print info
+#write_file(pathFile,info)
+#info = read_file(pathFile)
+#print info
+#set_info_song(path,info)
 
-info =  get_info_song(path)
-print info
-write_file(pathFile,info)
-info = read_file(pathFile)
-print info
-set_info_song(path,info)
+startDir = "/my_files/github/edits_tags_songs/music/"
+paths = getAllPathSongs(startDir)
