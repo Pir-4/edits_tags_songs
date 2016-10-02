@@ -5,10 +5,9 @@ import eyed3
 import json
 import shutil
 
-#path = '/my_files/github/edits_tags_songs/music/Dead By April - Last Goodbye (New Album: "Incomparable" 2011).mp3'
-#pathFile = '/my_files/github/edits_tags_songs/music/info.json'
 
 
+#************ work tags ****************
 def get_info_song(pathSong):
     info = {}
     trackInfo = eyed3.load(pathSong)
@@ -36,9 +35,13 @@ def get_info_song(pathSong):
 
 def set_info_song(pathSong,info):
     trackInfo = eyed3.load(pathSong)
+    artist = ""
+    songname = ""
     try:
         trackInfo.tag.artist = info.get("artist")
+        artist = info.get("artist")
         trackInfo.tag.title = info.get("title")
+        songname = info.get("title")
         trackInfo.tag.album = info.get("album")
         trackInfo.tag.album_artist = info.get("album_artist")
         trackInfo.tag.artist_url = info.get("artist_url")
@@ -46,6 +49,8 @@ def set_info_song(pathSong,info):
         print "Error write tag: " + pathSong
 
     trackInfo.tag.save()
+
+    return artist, songname
 
 
 def write_file(pathInfo,info):
@@ -56,7 +61,8 @@ def read_file(pathinfo):
     with open(pathinfo,'r') as outfile:
         info =  json.load(outfile)
     return info
-
+#******************************************
+#************ read songs ****************
 def getAllPathSongs(startDir):
     paths= []
     files = os.listdir(startDir)
@@ -90,24 +96,32 @@ def get_all_info(paths):
             write_file(infoPath,info)
             print song
 
-def set_all_info(dirs):
-    pathIfo = ""
-    pathSong = ""
-    for dir in dirs:
-        for file in os.listdir(dir):
-            if JSONNAME in file:
-                pathIfo = os.path.join(dir,file)
-            else:
-                pathSong = os.path.join(dir,file)
-        info = read_file(pathIfo)
-        set_info_song(pathSong,info)
-
-
 def get_info(startDir):
     paths = getAllPathSongs(startDir)
     renameDir = os.path.join(startDir,RENAMEDIR)
     paths = copyFileRenameDir(renameDir,paths)
     get_all_info(paths)
+#************************************************
+#************ write songs ****************
+def set_all_info(dirs):
+    pathIfo = ""
+    pathSong = ""
+    newSongs = {}
+    for dir in dirs:
+        songName = ""
+        for file in os.listdir(dir):
+            if JSONNAME in file:
+                pathIfo = os.path.join(dir,file)
+            else:
+                pathSong = os.path.join(dir,file)
+                songName = file
+
+        info = read_file(pathIfo)
+        artist,songname = set_info_song(pathSong,info)
+        if not "None" in artist and not "None" in songname:
+            songName = artist + " - " + songname
+        newSongs.update({songName:pathSong})
+    return newSongs
 
 def set_info(startDir):
     renameDir = os.path.join(startDir,RENAMEDIR)
@@ -118,15 +132,17 @@ def set_info(startDir):
     dirs = []
     for dir in os.listdir(renameDir):
         dirs.append(os.path.join(renameDir,dir))
-    set_all_info(dirs)
+    newSongs = set_all_info(dirs)
+    for key in newSongs:
+        shutil.move(newSongs.get(key),os.path.join(renameDir,key))
 
 
 JSONNAME = "info.json"
 RENAMEDIR = "RenameDir"
 startDir = "/my_files/github/edits_tags_songs/music/"
 
-get_info(startDir)
-#set_info(startDir)
+#get_info(startDir)
+set_info(startDir)
 
 
 
