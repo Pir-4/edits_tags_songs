@@ -15,34 +15,38 @@ def get_info_song(pathSong):
     try:
         info.update({"artist":str(trackInfo.tag.artist)})
     except:
-        info.update({"artist":str(" ")})
+        info.update({"artist":str("None")})
     try:
         info.update({"title":str(trackInfo.tag.title)})
     except:
-         info.update({"title":str(" ")})
+         info.update({"title":str("None")})
     try:
         info.update({"album":str(trackInfo.tag.album)})
     except:
-        info.update({"album":str(" ")})
+        info.update({"album":str("None")})
     try:
         info.update({"album_artist":str(trackInfo.tag.album_artist)})
     except:
-        info.update({"album_artist":str(" ")})
+        info.update({"album_artist":str("None")})
     try:
         info.update({"artist_url":str(trackInfo.tag.artist_url)})
     except:
-        info.update({"artist_url":str(" ")})
+        info.update({"artist_url":str("None")})
     return info
 
 def set_info_song(pathSong,info):
     trackInfo = eyed3.load(pathSong)
+    try:
+        trackInfo.tag.artist = info.get("artist")
+        trackInfo.tag.title = info.get("title")
+        trackInfo.tag.album = info.get("album")
+        trackInfo.tag.album_artist = info.get("album_artist")
+        trackInfo.tag.artist_url = info.get("artist_url")
+    except:
+        print "Error write tag: " + pathSong
 
-    trackInfo.tag.artist = info.get("artist")
-    trackInfo.tag.title = info.get("title")
-    trackInfo.tag.album = info.get("album")
-    trackInfo.tag.album_artist = info.get("album_artist")
-    trackInfo.tag.artist_url = info.get("artist_url")
     trackInfo.tag.save()
+
 
 def write_file(pathInfo,info):
     with open(pathInfo,'w') as outfile:
@@ -82,25 +86,48 @@ def get_all_info(paths):
          for file in files:
             song = os.path.join(dir,file)
             info = get_info_song(song)
-            infoPath = os.path.join(dir,"info.json")
+            infoPath = os.path.join(dir,JSONNAME)
             write_file(infoPath,info)
             print song
 
+def set_all_info(dirs):
+    pathIfo = ""
+    pathSong = ""
+    for dir in dirs:
+        for file in os.listdir(dir):
+            if JSONNAME in file:
+                pathIfo = os.path.join(dir,file)
+            else:
+                pathSong = os.path.join(dir,file)
+        info = read_file(pathIfo)
+        set_info_song(pathSong,info)
+
+
 def get_info(startDir):
-    renameDir = "RenameDir"
     paths = getAllPathSongs(startDir)
-    renameDir = os.path.join(startDir,renameDir)
+    renameDir = os.path.join(startDir,RENAMEDIR)
     paths = copyFileRenameDir(renameDir,paths)
     get_all_info(paths)
 
-#info =  get_info_song(path)
-#print info
-#write_file(pathFile,info)
-#info = read_file(pathFile)
-#print info
-#set_info_song(path,info)
+def set_info(startDir):
+    renameDir = os.path.join(startDir,RENAMEDIR)
+    if not os.path.exists(renameDir):
+        print "Not found " + renameDir
+        os._exit(1)
 
+    dirs = []
+    for dir in os.listdir(renameDir):
+        dirs.append(os.path.join(renameDir,dir))
+    set_all_info(dirs)
+
+
+JSONNAME = "info.json"
+RENAMEDIR = "RenameDir"
 startDir = "/my_files/github/edits_tags_songs/music/"
 
-#get_info(startDir)
+get_info(startDir)
+#set_info(startDir)
+
+
+
 
